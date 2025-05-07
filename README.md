@@ -24,9 +24,9 @@
 
 1. Clone the repo:
    
-git clone https://github.com/AnthonyDemoz/netsweep.git
+git clone https://github.com/AnthonyDemoz/Netsweep.git
 
-cd netsweep
+cd Netsweep
 
 2. Install required packages
    
