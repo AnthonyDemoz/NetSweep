@@ -1,4 +1,4 @@
-**NetSweep** is a simple Python-based LAN scanner with a graphical user interface (GUI). It supports:
+*NetSweep* is a simple Python-based LAN scanner with a graphical user interface (GUI). It supports:
 
 -Live device discovery using ICMP ping
 
@@ -12,15 +12,15 @@
 
 -Works with IPV4
 
-FEATURES
+**FEATURES**
 
-**Login-protected GUI**
+*Login-protected GUI*
 
-**host discovery with ping**
+*host discovery with ping*
 
-**TCP port scanning**
+*TCP port scanning*
 
-INSTALLATION
+**INSTALLATION**
 
 1. Clone the repo:
    
@@ -40,6 +40,6 @@ python setup_users.py
 
 python netsweep.py
 
-@2025_MdeBy Georges Orsot-Demozart
+**@2025_MdeBy Georges Orsot-Demozart**
 
-MIT License
+*MIT License*
