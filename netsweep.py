@@ -3,47 +3,62 @@ import subprocess
 import threading
 import logging
 import socket
+import platform
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from valid_auth import verify_user
 
-# Common ports for scanning
+# Configuration
+
 COMMON_PORTS = {
+    21: "FTP",
     22: "SSH",
-    80: "HTTP",
-    443: "HTTPS",
-    3389: "RDP",
-    139: "NetBIOS",
-    445: "SMB",
     53: "DNS",
-    21: "FTP"
+    80: "HTTP",
+    139: "NetBIOS",
+    443: "HTTPS",
+    445: "SMB",
+    3389: "RDP"
 }
 
-# Setup logging
 logging.basicConfig(
     filename="netsweep_gui.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Global stop flag
-stop_scan_flag = False
+stop_scan_flag = False  # Global flag to stop scanning
 
-# Ping an IP to check if it's up
-def ping_ip(ip):
+
+# Network Functions
+
+def ping_ip(ip, output_widget):
+    global stop_scan_flag
+    if stop_scan_flag:
+        return
+
     try:
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
         result = subprocess.run(
-            ['ping', '-n', '1', str(ip)],
+            ['ping', param, '1', str(ip)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        return ip if result.returncode == 0 else None
+        if result.returncode == 0:
+            status = f"{ip} is active\n"
+            logging.info(f"{ip} is active")
+            output_widget.insert(tk.END, status)
+            output_widget.see(tk.END)
+            return ip
+        else:
+            logging.info(f"{ip} is offline")
     except Exception as e:
-        logging.error(f"Ping error {ip}: {e}")
-        return None
+        logging.error(f"Error pinging {ip}: {e}")
+        output_widget.insert(tk.END, f"Error pinging {ip}: {e}\n")
+        output_widget.see(tk.END)
 
-# Scan common ports on a live IP
+
 def scan_ports(ip, output_widget):
     for port, service in COMMON_PORTS.items():
         if stop_scan_flag:
@@ -53,14 +68,14 @@ def scan_ports(ip, output_widget):
                 sock.settimeout(0.5)
                 result = sock.connect_ex((str(ip), port))
                 if result == 0:
-                    msg = f"    🔓 {ip}:{port} ({service}) is open\n"
+                    msg = f"{ip}:{port} ({service}) is open\n"
                     logging.info(msg.strip())
                     output_widget.insert(tk.END, msg)
                     output_widget.see(tk.END)
         except Exception as e:
             logging.error(f"Error on {ip}:{port} - {e}")
 
-# Start scan logic
+
 def start_scan(ip_range, output_widget, scan_btn, stop_btn):
     global stop_scan_flag
     stop_scan_flag = False
@@ -77,15 +92,18 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn):
     stop_btn.config(state=tk.NORMAL)
 
     def scan():
-        active_hosts = []
+        active_ips = []
         with ThreadPoolExecutor(max_workers=100) as executor:
-            results = list(executor.map(ping_ip, network.hosts()))
-            active_hosts = [ip for ip in results if ip is not None]
+            futures = [executor.submit(ping_ip, ip, output_widget) for ip in network.hosts()]
+            for future in futures:
+                result = future.result()
+                if result:
+                    active_ips.append(result)
 
-        output_widget.insert(tk.END, f"\n📡 {len(active_hosts)} active hosts found. Starting port scan...\n\n")
+        output_widget.insert(tk.END, f"\n📡 {len(active_ips)} active hosts found. Starting port scan...\n\n")
 
         with ThreadPoolExecutor(max_workers=50) as executor:
-            for ip in active_hosts:
+            for ip in active_ips:
                 executor.submit(scan_ports, ip, output_widget)
 
         output_widget.insert(tk.END, "\n✅ Scan complete.\n")
@@ -94,12 +112,14 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn):
 
     threading.Thread(target=scan).start()
 
-# Stop scan signal
+
 def stop_scan():
     global stop_scan_flag
     stop_scan_flag = True
 
-# Main GUI for scanning
+
+# GUI Functions
+
 def launch_gui():
     root = tk.Tk()
     root.title("NetSweep - LAN Scanner")
@@ -126,7 +146,7 @@ def launch_gui():
 
     root.mainloop()
 
-# Login Window
+
 def login_window():
     login = tk.Tk()
     login.title("NetSweep Login")
@@ -153,6 +173,6 @@ def login_window():
     tk.Button(login, text="Login", command=attempt_login, bg="#2e8b57", fg="white").pack(pady=10)
     login.mainloop()
 
-# Start the app
+
 if __name__ == "__main__":
     login_window()
