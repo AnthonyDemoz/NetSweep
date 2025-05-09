@@ -4,10 +4,25 @@ import threading
 import logging
 import socket
 import platform
+import time
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from valid_auth import verify_user
+
+def show_banner():
+    banner_lines = [
+        " _   _      _                  _____                          ",
+        "| \\ | | ___| |_ __ _ ___ ___  | ____|_ __   ___ _ __ ___ ___ ",
+        "|  \\| |/ _ \\ __/ _` / __/ __| |  _| | '_ \\ / _ \\ '__/ __/ _ \\",
+        "| |\\  |  __/ || (_| \\__ \\__ \\ | |___| | | |  __/ | | (_|  __/",
+        "|_| \\_|\\___|\\__\\__,_|___/___/ |_____|_| |_|\\___|_|  \\___\\___|",
+        ""
+    ]
+    for line in banner_lines:
+        print(line)
+        time.sleep(0.1)  # Adjust for faster/slower animation
+
 
 # Configuration
 
@@ -175,4 +190,5 @@ def login_window():
 
 
 if __name__ == "__main__":
+    show_banner()
     login_window()
