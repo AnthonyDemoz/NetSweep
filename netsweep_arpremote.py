@@ -5,6 +5,7 @@ import logging
 import socket
 import platform
 import time
+from scapy.all import ARP, Ether, srp
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
@@ -102,7 +103,7 @@ def scan_ports(ip, output_widget):
 
 
 
-def start_scan(ip_range, output_widget, scan_btn, stop_btn):
+def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
     global stop_scan_flag
     stop_scan_flag = False
 
@@ -118,25 +119,31 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn):
     stop_btn.config(state=tk.NORMAL)
 
     def scan():
-        active_ips = []
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            futures = [executor.submit(ping_ip, ip, output_widget) for ip in network.hosts()]
-            for future in futures:
-                result = future.result()
-                if result:
-                    active_ips.append(result)
+        if remote_mode:
+            output_widget.insert(tk.END, "🌐 Remote mode: using ICMP ping...\n")
 
-        output_widget.insert(tk.END, f"\n📡 {len(active_ips)} active hosts found. Starting port scan...\n\n")
+            def ping_host(ip):
+                param = '-n' if platform.system().lower() == 'windows' else '-c'
+                result = subprocess.run(
+                    ['ping', param, '1', str(ip)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                return ip if result.returncode == 0 else None
+
+            with ThreadPoolExecutor(max_workers=100) as executor:
+                futures = [executor.submit(ping_host, ip) for ip in network.hosts()]
+                hosts = [(ip, 'N/A') for ip in [f.result() for f in futures] if ip]
+        else:
+            output_widget.insert(tk.END, f"🔍 Performing ARP discovery on {ip_range}...\n\n")
+            hosts = arp_discover(str(network))
+
+        output_widget.insert(tk.END, f"📡 Found {len(hosts)} active hosts\n\n")
 
         with ThreadPoolExecutor(max_workers=50) as executor:
-            for ip in active_ips:
+            for ip, mac in hosts:
+                output_widget.insert(tk.END, f"🔎 Scanning {ip} ({mac})...\n")
                 executor.submit(scan_ports, ip, output_widget)
-
-        output_widget.insert(tk.END, "\n✅ Scan complete.\n")
-        scan_btn.config(state=tk.NORMAL)
-        stop_btn.config(state=tk.DISABLED)
-
-    threading.Thread(target=scan).start()
 
 
 def stop_scan():
@@ -165,7 +172,21 @@ def launch_gui():
     scan_btn = tk.Button(button_frame, text="Start Scan", bg="#2e8b57", fg="white")
     stop_btn = tk.Button(button_frame, text="Stop Scan", bg="#8b0000", fg="white", command=stop_scan, state=tk.DISABLED)
 
-    scan_btn.config(command=lambda: start_scan(ip_entry.get(), output_box, scan_btn, stop_btn))
+    is_remote = tk.BooleanVar()
+
+    remote_check = tk.Checkbutton(
+        root,
+        text="Remote Scan Mode (No ARP)",
+        variable=is_remote,
+        bg="#1e1e1e",
+        fg="white",
+        activebackground="#1e1e1e",
+        activeforeground="white",
+        selectcolor="#1e1e1e"
+    )
+    remote_check.pack(pady=5)
+
+    scan_btn.config(command=lambda: start_scan(ip_entry.get(), output_box, scan_btn, stop_btn, is_remote.get()))
 
     scan_btn.grid(row=0, column=0, padx=5)
     stop_btn.grid(row=0, column=1, padx=5)
