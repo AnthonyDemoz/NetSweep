@@ -3,7 +3,7 @@
 # NetSweep  
 **A modern Python-based network scanner with ARP & Remote discovery, login protection, port detection, banner grabbing, and Geo IP mapping.**
 
-![netsweep-banner](E:\NetSweep\docs\logo netsweep.jpg)
+![netsweep-banner](docs\netsweep.jpg)
 
 </div>
 
