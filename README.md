@@ -1,53 +1,34 @@
-# ⚡ NetSweep – Python LAN & Remote Scanner
+<div align="center">
 
-**NetSweep** is a powerful, GUI-based network scanner built with Python. It helps you discover devices on your local network or remote subnet, detect open ports, extract service banners, and optionally secure access with a login screen.
+# 🖥️ NetSweep  
+**A modern Python-based LAN & Remote network scanner with login security, port detection, banner grabbing, and Geo IP mapping.**
 
-Designed to be fast, clean, and beginner-friendly — with a professional touch.
+![netsweep-banner](docs/banner-netsweep.png)
 
-![NetSweep Banner](docs/banner.png) <!-- Optional visual -->
-
----
-
-## 🚀 Features
-
-- 🔐 **Login-protected access** (with bcrypt-secured user system)
-- 📡 **Host discovery** using **ARP** (LAN) or **ICMP ping** (remote)
-- 🔍 **Open port detection** on common TCP ports
-- 🧠 **Service & version detection** via banner grabbing
-- 🧰 **Multithreaded scanning** for performance
-- 💾 Optional export & logging (CSV support coming!)
-- 🧪 Responsive **Tkinter GUI** with dark mode
-- 📁 **Log file output**: `netsweep_gui.log`
+</div>
 
 ---
 
-## 🎯 How it Works
+### 🔍 About
 
-You can choose between:
+NetSweep is a Python-powered network scanning tool that makes it easy to detect devices on your LAN or remote subnets. It supports both ARP discovery and ICMP ping modes, login authentication, TCP port scanning, banner grabbing, and even public IP geolocation with a one-click Google Maps preview.
 
-- ✅ **Local Scan (default)** → uses ARP to discover all devices on your LAN and scan their ports  
-- 🌐 **Remote Scan Mode** → uses ping to find devices on any reachable IP range (e.g. VPN, cloud subnet)
+Whether you're a cybersecurity student, system admin, or enthusiast, NetSweep provides powerful recon features in a clean and intuitive GUI.
 
 ---
 
-## 🧩 Installation
+### 🛠️ Install & Run
 
 ```bash
-# 1. Clone the repo
+# Clone the repository
 git clone https://github.com/AnthonyDemoz/NetSweep.git
 cd NetSweep
----
 
-```bash
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
----
 
-```bash
-# 3. Create your first user
+# Set up your login user
 python setup_users.py
----
 
-```bash
-# 4. Run the scanner
+# Start scanning
 python netsweep.py
