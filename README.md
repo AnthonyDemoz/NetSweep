@@ -37,11 +37,17 @@ You can choose between:
 git clone https://github.com/AnthonyDemoz/NetSweep.git
 cd NetSweep
 ---
+
+```bash
 # 2. Install dependencies
 pip install -r requirements.txt
 ---
+
+```bash
 # 3. Create your first user
 python setup_users.py
 ---
+
+```bash
 # 4. Run the scanner
 python netsweep.py
