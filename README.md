@@ -3,7 +3,7 @@
 # NetSweep  
 **A modern Python-based network scanner with ARP & Remote discovery, login protection, port detection, banner grabbing, and Geo IP mapping.**
 
-![netsweep-banner]("docs/netsweep.jpg")
+![netsweep-banner](docs/netsweep.jpg)
 
 </div>
 
@@ -63,5 +63,9 @@ python geo_netsweep.py         # For Geo IP scanning
 
 🌍 8.8.8.8 ➜ United States - Mountain View (Google LLC) 📍 37.4056, -122.0775
 🗺️ View on Map
+
+---
+
+### Install & Run
 
 
