@@ -1,43 +1,49 @@
-*NetSweep* is a simple Python-based LAN scanner with a graphical user interface (GUI). It supports:
+# ⚡ NetSweep – Python LAN & Remote Scanner
 
--Live device discovery using ICMP ping
+**NetSweep** is a powerful, GUI-based network scanner built with Python. It helps you discover devices on your local network or remote subnet, detect open ports, extract service banners, and optionally secure access with a login screen.
 
--User login authentication (bcrypt-secured)
+Designed to be fast, clean, and beginner-friendly — with a professional touch.
 
--Scans for open TCP ports on active hosts
+![NetSweep Banner](docs/banner.png) <!-- Optional visual -->
 
--Multithreaded scanning for speed
+---
 
--Easy-to-use Tkinter GUI
+## 🚀 Features
 
--Works with IPV4
+- 🔐 **Login-protected access** (with bcrypt-secured user system)
+- 📡 **Host discovery** using **ARP** (LAN) or **ICMP ping** (remote)
+- 🔍 **Open port detection** on common TCP ports
+- 🧠 **Service & version detection** via banner grabbing
+- 🧰 **Multithreaded scanning** for performance
+- 💾 Optional export & logging (CSV support coming!)
+- 🧪 Responsive **Tkinter GUI** with dark mode
+- 📁 **Log file output**: `netsweep_gui.log`
 
-**FEATURES**
+---
 
-*Login-protected GUI*
+## 🎯 How it Works
 
-*host discovery with ping*
+You can choose between:
 
-*TCP port scanning*
+- ✅ **Local Scan (default)** → uses ARP to discover all devices on your LAN and scan their ports  
+- 🌐 **Remote Scan Mode** → uses ping to find devices on any reachable IP range (e.g. VPN, cloud subnet)
 
-**INSTALLATION**
+---
 
-1. Clone the repo:
-   
-git clone https://github.com/AnthonyDemoz/Netsweep.git
+## 🧩 Installation
 
-cd Netsweep
+```bash
+# 1. Clone the repo
+git clone https://github.com/AnthonyDemoz/NetSweep.git
+cd NetSweep
 
-2. Install required packages
-   
+# 2. Install dependencies
 pip install -r requirements.txt
 
-3. Create a user
-
+# 3. Create your first user
 python setup_users.py
 
-4. Launch the scanner
-
+# 4. Run the scanner
 python netsweep.py
 
 **@2025_MdeBy Georges Orsot-Demozart**
