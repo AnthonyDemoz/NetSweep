@@ -1,7 +1,7 @@
 <div align="center">
 
-# 🖥️ NetSweep  
-**A modern Python-based LAN & Remote network scanner with login security, port detection, banner grabbing, and Geo IP mapping.**
+# NetSweep  
+**A modern Python-based network scanner with ARP & Remote discovery, login protection, port detection, banner grabbing, and Geo IP mapping.**
 
 ![netsweep-banner](docs/banner-netsweep.png)
 
@@ -9,26 +9,59 @@
 
 ---
 
-### 🔍 About
+### About
 
-NetSweep is a Python-powered network scanning tool that makes it easy to detect devices on your LAN or remote subnets. It supports both ARP discovery and ICMP ping modes, login authentication, TCP port scanning, banner grabbing, and even public IP geolocation with a one-click Google Maps preview.
+**NetSweep** is a user-friendly and powerful network scanning toolkit built in Python with a graphical interface. It supports:
 
-Whether you're a cybersecurity student, system admin, or enthusiast, NetSweep provides powerful recon features in a clean and intuitive GUI.
+- LAN scanning using ARP packets
+- Remote subnet scanning using ICMP ping
+- TCP port discovery with service banner grabbing
+- Public IP geolocation with a Google Maps preview
+- Password-protected access using bcrypt hashing
+
+NetSweep is ideal for cybersecurity students, ethical hackers, and sysadmins who want a fast, GUI-based alternative to CLI tools.
 
 ---
 
-### 🛠️ Install & Run
+### Project Versions
+
+| Version              | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| **`NetSweep_arpremote`** | Combines ARP scanning for LAN with ICMP ping for remote subnets              |
+| **`geo_netsweep`**       | Adds Geo IP lookup and Google Maps integration for public IPs (no ARP)     |
+
+Both versions share the same login system, core scanning engine, and multithreaded performance — choose based on your scanning focus.
+
+---
+
+### Install & Run
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/AnthonyDemoz/NetSweep.git
 cd NetSweep
 
-# Install dependencies
+# 2. Install required Python packages
 pip install -r requirements.txt
 
-# Set up your login user
+# 3. Create a secure login user
 python setup_users.py
 
-# Start scanning
-python netsweep.py
+# 4. Run one of the versions:
+python netsweep_arpremote.py   # For LAN & remote scan
+python geo_netsweep.py         # For Geo IP scanning
+
+---
+
+### Sample Output
+
+🔍 Performing ARP discovery on 192.168.1.0/24...
+📡 Found 4 active hosts
+
+🔎 Scanning 192.168.1.1 (Router)
+    🔓 192.168.1.1:80 (HTTP) is open ➜ nginx/1.18.0
+
+🌍 8.8.8.8 ➜ United States - Mountain View (Google LLC) 📍 37.4056, -122.0775
+🗺️ View on Map
+
+
