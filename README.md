@@ -36,16 +36,12 @@ You can choose between:
 # 1. Clone the repo
 git clone https://github.com/AnthonyDemoz/NetSweep.git
 cd NetSweep
-
+---
 # 2. Install dependencies
 pip install -r requirements.txt
-
+---
 # 3. Create your first user
 python setup_users.py
-
+---
 # 4. Run the scanner
 python netsweep.py
-
-**@2025_MdeBy Georges Orsot-Demozart**
-
-*MIT License*
