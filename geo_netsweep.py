@@ -1,3 +1,4 @@
+
 import ipaddress
 import subprocess
 import threading
@@ -13,31 +14,25 @@ from tkinter import scrolledtext, messagebox
 from valid_auth import verify_user
 
 # ─────── ASCII Banner ───────
-
 def show_banner():
     banner = [
-        "        ┌──────────────────────────────────────┐",
+        "        ┌────────────────────────────┐",
         "        │  NetSweep - LAN Scanner  │",
-        "        └──────────────────────────────────────┘",
+        "        └────────────────────────────┘",
         "                ║     ",
         "           ┌────▼────┐",
-        "           │  Router │️️—️️📶—️️ Internet",
-        "           └───────┘",
-        "        (ARP & TCP scanner + Geo IP)\n"
+        "           │  Router │───📶─── Internet",
+        "           └─────────┘",
+        "        (ARP & TCP scanner + Geo IP)",
+        ""
     ]
-    print("\n".join(banner))
+    for line in banner:
+        print(line)
 
-# ─────── Globals ───────
-
+# ─────── Config & Globals ───────
 COMMON_PORTS = {
-    21: "FTP",
-    22: "SSH",
-    53: "DNS",
-    80: "HTTP",
-    139: "NetBIOS",
-    443: "HTTPS",
-    445: "SMB",
-    3389: "RDP"
+    21: "FTP", 22: "SSH", 53: "DNS", 80: "HTTP",
+    139: "NetBIOS", 443: "HTTPS", 445: "SMB", 3389: "RDP"
 }
 
 logging.basicConfig(
@@ -48,8 +43,7 @@ logging.basicConfig(
 
 stop_scan_flag = False
 
-# ─────── Functions ───────
-
+# ─────── Network Functions ───────
 def arp_discover(ip_range):
     try:
         arp = ARP(pdst=ip_range)
@@ -79,14 +73,22 @@ def scan_ports(ip, output_widget):
     if stop_scan_flag:
         return
 
+    try:
+        ipaddress.ip_address(ip)  # validate
+    except:
+        return
+
     is_private = ipaddress.ip_address(ip).is_private
     if not is_private:
         geo = geo_lookup(ip)
         if geo:
             summary = geo["summary"]
             lat, lon = geo["lat"], geo["lon"]
-            output_widget.insert(tk.END, f"\n🌍 {ip} ➜ {summary} (📍 {lat}, {lon})\n")
-            webbrowser.open(f"https://www.google.com/maps?q={lat},{lon}")
+            output_widget.insert(tk.END, f"🌍 {ip} ➜ {summary} (📍 {lat}, {lon})\n")
+            output_widget.see(tk.END)
+            def open_map():
+                webbrowser.open(f"https://www.google.com/maps?q={lat},{lon}")
+            output_widget.after(0, lambda: tk.Button(output_widget, text="🗺️ View on Map", command=open_map).pack())
         else:
             output_widget.insert(tk.END, f"🌍 {ip} ➜ Geo Info N/A\n")
 
@@ -96,19 +98,14 @@ def scan_ports(ip, output_widget):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(1.0)
-                result = sock.connect_ex((str(ip), port))
+                result = sock.connect_ex((ip, port))
                 if result == 0:
-                    try:
-                        sock.sendall(b"\n")
-                        banner = sock.recv(1024).decode(errors="ignore").strip()
-                        msg = f"    🔓 {ip}:{port} ({service}) ➜ {banner}\n" if banner else f"    🔓 {ip}:{port} ({service}) is open\n"
-                    except:
-                        msg = f"    🔓 {ip}:{port} ({service}) is open (no banner)\n"
+                    msg = f"    🔓 {ip}:{port} ({service}) is open\n"
                     output_widget.insert(tk.END, msg)
                     output_widget.see(tk.END)
                     logging.info(msg.strip())
         except Exception as e:
-            logging.error(f"Error on {ip}:{port} - {e}")
+            logging.error(f"Port scan error on {ip}:{port} - {e}")
 
 def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
     global stop_scan_flag
@@ -129,19 +126,18 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
             output_widget.insert(tk.END, "🌐 Remote mode: using ICMP ping...\n")
             def ping_host(ip):
                 param = '-n' if platform.system().lower() == 'windows' else '-c'
-                result = subprocess.run([
-                    'ping', param, '1', str(ip)
-                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                result = subprocess.run(['ping', param, '1', str(ip)],
+                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return ip if result.returncode == 0 else None
+
             with ThreadPoolExecutor(max_workers=100) as executor:
-                futures = [executor.submit(ping_host, ip) for ip in network.hosts()]
-                hosts = [(ip, 'N/A') for ip in [f.result() for f in futures if f.result()]]
+                futures = [executor.submit(ping_host, str(ip)) for ip in network.hosts()]
+                hosts = [(ip, 'N/A') for ip in [f.result() for f in futures] if ip]
         else:
             output_widget.insert(tk.END, f"🔍 Performing ARP discovery on {ip_range}...\n\n")
             hosts = arp_discover(str(network))
 
         output_widget.insert(tk.END, f"📡 Found {len(hosts)} active hosts\n\n")
-
         with ThreadPoolExecutor(max_workers=50) as executor:
             for ip, mac in hosts:
                 output_widget.insert(tk.END, f"🔎 Scanning {ip} ({mac})...\n")
@@ -157,8 +153,7 @@ def stop_scan():
     global stop_scan_flag
     stop_scan_flag = True
 
-# ─────── GUI ───────
-
+# ─────── GUI Functions ───────
 def launch_gui():
     root = tk.Tk()
     root.title("NetSweep - LAN Scanner")
@@ -180,14 +175,9 @@ def launch_gui():
 
     is_remote = tk.BooleanVar()
     remote_check = tk.Checkbutton(
-        root,
-        text="Remote Scan Mode (No ARP)",
-        variable=is_remote,
-        bg="#1e1e1e",
-        fg="white",
-        activebackground="#1e1e1e",
-        activeforeground="white",
-        selectcolor="#1e1e1e"
+        root, text="Remote Scan Mode (No ARP)", variable=is_remote,
+        bg="#1e1e1e", fg="white", activebackground="#1e1e1e",
+        activeforeground="white", selectcolor="#1e1e1e"
     )
     remote_check.pack(pady=5)
 
@@ -197,6 +187,7 @@ def launch_gui():
 
     root.mainloop()
 
+# ─────── Login & Launch ───────
 def login_window():
     login = tk.Tk()
     login.title("NetSweep Login")
@@ -223,7 +214,7 @@ def login_window():
     tk.Button(login, text="Login", command=attempt_login, bg="#2e8b57", fg="white").pack(pady=10)
     login.mainloop()
 
-# ─────── Entry ───────
+# ─────── Entry Point ───────
 if __name__ == "__main__":
     show_banner()
     login_window()
