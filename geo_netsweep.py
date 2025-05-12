@@ -16,21 +16,18 @@ from valid_auth import verify_user
 
 def show_banner():
     banner = [
-        "        ┌────────────────────────────┐",
+        "        ┌──────────────────────────────────────┐",
         "        │  NetSweep - LAN Scanner  │",
-        "        └────────────────────────────┘",
+        "        └──────────────────────────────────────┘",
         "                ║     ",
         "           ┌────▼────┐",
-        "           │  Router │───📶─── Internet",
-        "           └─────────┘",
-        "        (ARP & TCP scanner + Geo IP)",
-        ""
+        "           │  Router │️️—️️📶—️️ Internet",
+        "           └───────┘",
+        "        (ARP & TCP scanner + Geo IP)\n"
     ]
-    for line in banner:
-        print(line)
+    print("\n".join(banner))
 
-
-# ─────── Config & Globals ───────
+# ─────── Globals ───────
 
 COMMON_PORTS = {
     21: "FTP",
@@ -51,8 +48,7 @@ logging.basicConfig(
 
 stop_scan_flag = False
 
-
-# ─────── Helper Functions ───────
+# ─────── Functions ───────
 
 def arp_discover(ip_range):
     try:
@@ -64,7 +60,6 @@ def arp_discover(ip_range):
     except Exception as e:
         logging.error(f"ARP scan error: {e}")
         return []
-
 
 def geo_lookup(ip):
     try:
@@ -80,7 +75,6 @@ def geo_lookup(ip):
         logging.error(f"Geo IP lookup failed for {ip}: {e}")
     return None
 
-
 def scan_ports(ip, output_widget):
     if stop_scan_flag:
         return
@@ -91,14 +85,10 @@ def scan_ports(ip, output_widget):
         if geo:
             summary = geo["summary"]
             lat, lon = geo["lat"], geo["lon"]
-            output_widget.insert(tk.END, f"🌍 {ip} ➜ {summary} (📍 {lat}, {lon})\n")
-
-            def open_map():
-                webbrowser.open(f"https://www.google.com/maps?q={lat},{lon}")
-            output_widget.after(0, lambda: tk.Button(output_widget, text="🗺️ View on Map", command=open_map).pack())
+            output_widget.insert(tk.END, f"\n🌍 {ip} ➜ {summary} (📍 {lat}, {lon})\n")
+            webbrowser.open(f"https://www.google.com/maps?q={lat},{lon}")
         else:
             output_widget.insert(tk.END, f"🌍 {ip} ➜ Geo Info N/A\n")
-        output_widget.see(tk.END)
 
     for port, service in COMMON_PORTS.items():
         if stop_scan_flag:
@@ -111,18 +101,14 @@ def scan_ports(ip, output_widget):
                     try:
                         sock.sendall(b"\n")
                         banner = sock.recv(1024).decode(errors="ignore").strip()
-                        if banner:
-                            msg = f"    🔓 {ip}:{port} ({service}) ➜ {banner}\n"
-                        else:
-                            msg = f"    🔓 {ip}:{port} ({service}) is open\n"
+                        msg = f"    🔓 {ip}:{port} ({service}) ➜ {banner}\n" if banner else f"    🔓 {ip}:{port} ({service}) is open\n"
                     except:
                         msg = f"    🔓 {ip}:{port} ({service}) is open (no banner)\n"
-                    logging.info(msg.strip())
                     output_widget.insert(tk.END, msg)
                     output_widget.see(tk.END)
+                    logging.info(msg.strip())
         except Exception as e:
             logging.error(f"Error on {ip}:{port} - {e}")
-
 
 def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
     global stop_scan_flag
@@ -143,16 +129,13 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
             output_widget.insert(tk.END, "🌐 Remote mode: using ICMP ping...\n")
             def ping_host(ip):
                 param = '-n' if platform.system().lower() == 'windows' else '-c'
-                result = subprocess.run(
-                    ['ping', param, '1', str(ip)],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+                result = subprocess.run([
+                    'ping', param, '1', str(ip)
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return ip if result.returncode == 0 else None
-
             with ThreadPoolExecutor(max_workers=100) as executor:
                 futures = [executor.submit(ping_host, ip) for ip in network.hosts()]
-                hosts = [(ip, 'N/A') for ip in [f.result() for f in futures] if ip]
+                hosts = [(ip, 'N/A') for ip in [f.result() for f in futures if f.result()]]
         else:
             output_widget.insert(tk.END, f"🔍 Performing ARP discovery on {ip_range}...\n\n")
             hosts = arp_discover(str(network))
@@ -170,13 +153,11 @@ def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
 
     threading.Thread(target=scan).start()
 
-
 def stop_scan():
     global stop_scan_flag
     stop_scan_flag = True
 
-
-# ─────── GUI Functions ───────
+# ─────── GUI ───────
 
 def launch_gui():
     root = tk.Tk()
@@ -216,7 +197,6 @@ def launch_gui():
 
     root.mainloop()
 
-
 def login_window():
     login = tk.Tk()
     login.title("NetSweep Login")
@@ -243,9 +223,7 @@ def login_window():
     tk.Button(login, text="Login", command=attempt_login, bg="#2e8b57", fg="white").pack(pady=10)
     login.mainloop()
 
-
-# ─────── Entry Point ───────
-
+# ─────── Entry ───────
 if __name__ == "__main__":
     show_banner()
     login_window()
