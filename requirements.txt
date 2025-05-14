@@ -1,3 +1,4 @@
 bcrypt
 requests
 scapy
+mac-vendor-lookup

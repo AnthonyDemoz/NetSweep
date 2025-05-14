@@ -9,6 +9,7 @@ import bcrypt
 import sqlite3
 import requests
 from concurrent.futures import ThreadPoolExecutor
+from scapy.all import ARP, Ether, srp
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from mac_vendor_lookup import MacLookup
@@ -86,6 +87,19 @@ def ping_ip(ip):
                             stderr=subprocess.DEVNULL)
     return str(ip) if result.returncode == 0 else None
 
+# ─────── ARP scan ───────
+def arp_discover(ip_range):
+    try:
+        arp = ARP(pdst=ip_range)
+        ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+        packet = ether / arp
+        result = srp(packet, timeout=2, verbose=0)[0]
+        return [(rcv.psrc, rcv.hwsrc) for _, rcv in result]
+    except Exception as e:
+        logging.error(f"ARP scan error: {e}")
+        return []
+
+
 # ─────── Scan Ports ───────
 def scan_ports(ip, output_widget):
     for port, service in COMMON_PORTS.items():
@@ -108,30 +122,54 @@ def scan_ports(ip, output_widget):
             logging.error(f"Error scanning {ip}:{port} → {e}")
 
 # ─────── Main Scan Routine ───────
-def start_scan(ip_range, output_widget, scan_btn, stop_btn):
+def start_scan(ip_range, output_widget, scan_btn, stop_btn, remote_mode=False):
     global stop_scan_flag
     stop_scan_flag = False
 
     try:
         network = ipaddress.ip_network(ip_range, strict=False)
     except ValueError:
-        messagebox.showerror("Invalid Input", "Enter CIDR like 192.168.1.0/24")
+        messagebox.showerror("Invalid Input", "Please enter a valid CIDR like 192.168.1.0/24")
         return
 
     output_widget.delete(1.0, tk.END)
-    output_widget.insert(tk.END, f"🔍 Scanning {len(list(network.hosts()))} hosts...\n")
     scan_btn.config(state=tk.DISABLED)
     stop_btn.config(state=tk.NORMAL)
 
     def scan():
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            futures = [executor.submit(ping_ip, ip) for ip in network.hosts()]
-            live_hosts = [f.result() for f in futures if f.result()]
+        if remote_mode:
+            output_widget.insert(tk.END, "🌐 Remote Mode: Scanning via ICMP ping...\n\n")
 
-        output_widget.insert(tk.END, f"📡 Found {len(live_hosts)} live hosts\n\n")
-        for ip, mac in live_hosts:
-            output_widget.insert(tk.END, f"🔎 Scanning {ip}...\n")
-            scan_ports(ip, output_widget)
+            def ping_host(ip):
+                param = '-n' if platform.system().lower() == 'windows' else '-c'
+                result = subprocess.run(
+                    ['ping', param, '1', str(ip)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                return ip if result.returncode == 0 else None
+
+            with ThreadPoolExecutor(max_workers=100) as executor:
+                futures = [executor.submit(ping_host, ip) for ip in network.hosts()]
+                live_hosts = [f.result() for f in futures if f.result()]
+
+            output_widget.insert(tk.END, f"📡 Found {len(live_hosts)} live hosts\n\n")
+
+            for ip in live_hosts:
+                output_widget.insert(tk.END, f"🔎 Scanning {ip}...\n")
+                output_widget.see(tk.END)
+                scan_ports(ip, output_widget)
+
+        else:
+            output_widget.insert(tk.END, "🧭 Local Mode: Performing ARP discovery...\n\n")
+            hosts = arp_discover(str(network))
+            output_widget.insert(tk.END, f"📡 Found {len(hosts)} live devices\n\n")
+
+            for ip, mac in hosts:
+                vendor = get_mac_vendor(mac)
+                output_widget.insert(tk.END, f"🔎 {ip} ({mac}) ➜ {vendor}\n")
+                output_widget.see(tk.END)
+                scan_ports(ip, output_widget)
 
         output_widget.insert(tk.END, "\n✅ Scan complete.\n")
         scan_btn.config(state=tk.NORMAL)
@@ -178,10 +216,23 @@ def launch_gui():
     # Buttons
     button_frame = tk.Frame(root, bg="#1e1e1e")
     button_frame.pack(pady=5)
+    # Scan mode checkbox
+    is_remote = tk.BooleanVar()
+    remote_check = tk.Checkbutton(
+        root,
+        text="Remote Scan Mode (ICMP ping)",
+        variable=is_remote,
+        bg="#1e1e1e",
+        fg="white",
+        activebackground="#1e1e1e",
+        activeforeground="white",
+        selectcolor="#1e1e1e"
+    )
+    remote_check.pack(pady=5)
     scan_btn = tk.Button(button_frame, text="Start Scan", bg="#2e8b57", fg="white")
     stop_btn = tk.Button(button_frame, text="Stop", bg="#8b0000", fg="white", command=stop_scan, state=tk.DISABLED)
 
-    scan_btn.config(command=lambda: start_scan(ip_entry.get(), output_box, scan_btn, stop_btn))
+    scan_btn.config(command=lambda: start_scan(ip_entry.get(), output_box, scan_btn, stop_btn, is_remote.get()))
     scan_btn.grid(row=0, column=0, padx=5)
     stop_btn.grid(row=0, column=1, padx=5)
 
