@@ -13,7 +13,7 @@
 
 **NetSweep** is a user-friendly and powerful network scanning toolkit built in Python with a graphical interface. It supports:
 
-- LAN scanning using Ping
+- LAN scanning using Ping and Remote scanning using ARP
 - TCP port discovery with service banner grabbing
 - Public IP geolocation
 - Password-protected access using bcrypt hashing
@@ -26,7 +26,7 @@ NetSweep is ideal for cybersecurity students, ethical hackers, and sysadmins who
 
 | Version              | Description                                                                 |
 |----------------------|-----------------------------------------------------------------------------|
-| **`NetSweep_arpremote`** | Combines ARP scanning for LAN              |
+| **`Netsweep`** | Combines ARP scanning and Ping scanning    |
 | **`geo_netsweep`**       | Adds Geo IP lookup and Google Maps integration for public IPs (no ARP)     |
 
 Both versions share the same login system, core scanning engine, and multithreaded performance — choose based on your scanning focus.
@@ -53,7 +53,7 @@ python setup_users.py
 ```
 # 5. Run one of the versions:
 ```
-python netsweep.py   # For LAN scan
+python netsweep.py   # For LAN scan and remote scan
 python geo_netsweep.py         # For IP Geolocation
 ```
 ---
