@@ -56,6 +56,7 @@ python setup_users.py
 python netsweep.py   # For LAN scan and remote scan
 python geo_netsweep.py         # For IP Geolocation
 ```
+# 6. Use chmod +x to make the file executable
 ---
 ### License
 
