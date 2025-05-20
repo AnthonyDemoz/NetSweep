@@ -43,20 +43,32 @@ git clone https://github.com/AnthonyDemoz/NetSweep.git
 ```
 cd NetSweep
 ```
-# 3. Install required Python packages
+# 3. Make sure venv is installed (Linux)
+```
+sudo apt install python3-venv
+```
+# 4. Create a virtual environment (Linux)
+```
+python3 -m venv netsweep-env
+```
+# 5. Activate it (Linux)
+```
+source netsweep-env/bin/activate
+```
+# 4. Install required Python packages
 ```
 pip install -r requirements.txt
 ```
-# 4. Create a secure login user
+# 5. Create a secure login user
 ```
 python setup_users.py
 ```
-# 5. Run one of the versions:
+# 6. Run one of the versions:
 ```
 python netsweep.py   # For LAN scan and remote scan
 python geo_netsweep.py         # For IP Geolocation
 ```
-# 6. Use chmod +x to make the file executable
+# 7. Use chmod +x to make the file executable
 ---
 ### License
 
